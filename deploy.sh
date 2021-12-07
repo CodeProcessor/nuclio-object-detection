@@ -1,2 +1,2 @@
-nuctl deploy helloworld --path nuclio/main.py
-nuctl get function helloworld
+nuctl deploy --project-name cvat --path nuclio
+nuctl get function simplifai-box-detection

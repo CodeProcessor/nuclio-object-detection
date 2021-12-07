@@ -1,0 +1,60 @@
+metadata:
+  name: simplifai-box-detection
+  namespace: cvat
+  annotations:
+    name: box-detection
+    type: detector
+    spec: |
+      [
+        { "id": 1, "name": "box" },
+      ]
+    framework: pytorch
+    min_pos_points: 1
+    min_neg_points: 0
+    help_message: The box detector allows to automatically annotate boxes in a given image
+
+spec:
+  description: Box Detection
+  runtime: 'python:3.6'
+  handler: main:handler
+  eventTimeout: 30s
+  env:
+    - name: PYTHONPATH
+      value: /opt/nuclio/box-detection
+
+  build:
+    image: cvat/box_detection:latest
+    baseImage: python:3.6.11
+
+    directives:
+      preCopy:
+        - kind: WORKDIR
+          value: /opt/nuclio
+#        - kind: RUN
+#          value: pip3 install torch==1.10.0+cpu torchvision==0.11.1+cpu torchaudio==0.10.0+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
+        - kind: RUN
+          value: git clone https://github.com/CodeProcessor/box-detection-inference.git box-detection
+        - kind: WORKDIR
+          value: /opt/nuclio/box-detection
+        - kind: RUN
+          value: apt update && apt install -y libgl1-mesa-glx
+        - kind: RUN
+          value: pip3 install -r requirements.txt
+        - kind: WORKDIR
+          value: /opt/nuclio
+
+  triggers:
+    myHttpTrigger:
+      maxWorkers: 2
+      kind: 'http'
+      workerAvailabilityTimeoutMilliseconds: 10000
+      attributes:
+        maxRequestBodySize: 33554432 # 32MB
+
+  platform:
+    attributes:
+      restartPolicy:
+        name: always
+        maximumRetryCount: 3
+      mountMode: volume
+      network: cvat_cvat
