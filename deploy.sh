@@ -1,2 +1,2 @@
-nuctl deploy --project-name cvat --path nuclio
+nuctl deploy --project-name simplifai --path nuclio
 nuctl get function simplifai-box-detection

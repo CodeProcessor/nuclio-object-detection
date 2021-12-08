@@ -9,9 +9,13 @@ import io
 import json
 
 from PIL import Image
+from box.box_detection import BoxDetection
 
 
 def init_context(context):
+    model_file_path = 'box/best_640.torchscript.pt'
+    model = BoxDetection(model_file_path)
+    context.user_data.model = model
     context.logger.info('init_context')
 
 
@@ -23,17 +27,12 @@ def handler(context, event):
     buf = io.BytesIO(base64.b64decode(data["image"]))
     image = Image.open(buf)
 
-    # do the prediction
-
     # log with debug severity
     context.logger.debug(image.size)
-    results = []
-    results.append({
-        "confidence": str(0.8),
-        "label": "box",
-        "points": [100, 100, 200, 200],
-        "type": "rectangle",
-    })
+
+    # do the prediction
+    results = context.user_data.model.get_boxes(image, threshold)
+
     # just return a response instance
     return context.Response(body=json.dumps(results),
                             headers={},
